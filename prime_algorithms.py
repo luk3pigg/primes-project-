@@ -6,9 +6,9 @@ def is_valid(n):
         raise TypeError(f"Limit must be an integer, but got {n}.") 
     if n <= 1:
         raise ValueError(f"Limit must be greater than 1 to find primes, but got {n}.")
-    
-    
-            
+ 
+#algorithm 1 - Brute Force   
+ 
 def brute_force_primes(upper_limit):
     """
     Finds all prime numbers up to a specified limit using brute force.
@@ -39,10 +39,7 @@ def brute_force_primes(upper_limit):
 #does prove that 2 is prime, because 2 % 2 = 0 - doesn't just skip over 2.
 # proves that 2 is prime: assumes a number is prime until it finds a factor with 0 remainder. But there are no (integer) factors of 2 between 1 and 2 (itself) - so no factors for remainder to be 0, so must be prime. so for i=2, inner for loop is skipped entirely
 
-primes = brute_force_primes(upper_limit = upper_limit)
-print(primes)
-
-
+#algorithm 2 - introduce square root optimisation 
 
 def optimised_trial_division_with_2(upper_limit):
     """
@@ -80,9 +77,8 @@ def optimised_trial_division_with_2(upper_limit):
 #note: small things like defining max factor first then using in range() does not make much difference to algoirhtm speed because python is clever enough to realise this: but better to calculate it once outside anyway to avoid repeatedly doing it inside range.
 
 
-primes = optimised_trial_division_with_2(upper_limit = upper_limit)
-print(primes)
 
+#algorithm 3 - skip evens, limit of this for skipping other bases cases
 
 #deliberate technique to improve algorithm time: handle base cases ie 1 not prime, 2 is prime, then find rest.
     
@@ -125,10 +121,106 @@ def optimised_trial_division(upper_limit):
 #can assume more primes, but speed increase is diminishing!
 #sweet spot is hard coding 2 and 3 - try this! quicker than just hard coding 2? what about 5? for 1,000,000? 
 
-primes = optimised_trial_division(upper_limit = upper_limit)
-print(primes) 
+#algorithm 4 - set sieve method
 
-def sieve_of_eratosthenes(upper_limit):
+def set_sieve(upper_limit):
+    """
+    """
+    num_range = set(range(2, upper_limit + 1))
+    primes = []
+    
+    while num_range: #while number range isn't empty
+        prime = num_range.pop() #pop removes arbitrary element as sets are unordered. Generally, for small integers, will pop smallest first. But sieve algorithm breaks down if smallest factor not popped first.!
+        primes.append(prime) #must be a prime as it is smallest number remaining so has no divisors. 
+        multiples = set(range(prime, upper_limit + 1, prime)) #should start at prime*prime - see doc for reasons. 
+        
+        #difference_update is a built in method for sets only. Removes numbers from a set that are also present in the argument 
+        num_range.difference_update(multiples)
+    return primes
+    
+
+
+
+#algorithm 5 - naive sieve variant
+
+def sieve_of_eratosthenes1(upper_limit):
+    """
+    Finds all prime numbers up to a specified limit using the Sieve of Eratosthenes.
+    This method avoids division entirely by systematically crossing out multiples 
+    of known primes.
+    
+    Args:
+        limit (int): The upper bound (inclusive) up to which to search for primes.
+        
+    Returns:
+        list: A list of all prime numbers from 2 up to the limit.
+    """
+    is_valid(upper_limit)
+
+    # Create a boolean array, assuming all numbers are prime initially.
+    sieve = [True] * (upper_limit + 1)
+    
+    # 0 and 1 are mathematically not prime, so we cross them out immediately.
+    sieve[0] = sieve[1] = False
+    
+    # We only need to sieve up to the square root of the limit, because: 
+    for p in range(2, upper_limit + 1):
+        # If sieve[p] is still True, p is a prime
+        if sieve[p]:
+            # Cross out all multiples of p - becomes less discriminatory as p increases
+            # We can optimise by starting the crossing out at p squared, 
+            # because any smaller multiple (e.g., p * 2) was already crossed out by a smaller prime.
+            # We step by p to jump to the next multiple.
+            for multiple in range(p, upper_limit + 1, p):
+                sieve[multiple] = False
+                
+    # Finally, collect all the indices that remained True
+    primes = [p for p in range(2, upper_limit + 1) if sieve[p]]
+    
+    return primes
+
+#algorithm 6 - introduce trimming factors search, start from p*p
+
+def sieve_of_eratosthenes2(upper_limit):
+    """
+    Finds all prime numbers up to a specified limit using the Sieve of Eratosthenes.
+    This method avoids division entirely by systematically crossing out multiples 
+    of known primes.
+    
+    Args:
+        limit (int): The upper bound (inclusive) up to which to search for primes.
+        
+    Returns:
+        list: A list of all prime numbers from 2 up to the limit.
+    """
+    is_valid(upper_limit)
+
+    # Create a boolean array, assuming all numbers are prime initially.
+    sieve = [True] * (upper_limit + 1)
+    
+    # 0 and 1 are mathematically not prime, so we cross them out immediately.
+    sieve[0] = sieve[1] = False
+    
+    # We only need to sieve up to the square root of the limit, because: 
+    for p in range(2, upper_limit + 1):
+        # If sieve[p] is still True, p is a prime
+        if sieve[p]:
+            # Cross out all multiples of p - becomes less discriminatory as p increases
+            # We can optimise by starting the crossing out at p squared, 
+            # because any smaller multiple (e.g., p * 2) was already crossed out by a smaller prime.
+            # We step by p to jump to the next multiple.
+            for multiple in range(p * p, upper_limit + 1, p):
+                sieve[multiple] = False
+                
+    # Finally, collect all the indices that remained True
+    primes = [p for p in range(2, upper_limit + 1) if sieve[p]]
+    
+    return primes
+
+
+#algorithm 7 - true eratosthenes sieve, with square root optimisation
+   
+def sieve_of_eratosthenes3(upper_limit):
     """
     Finds all prime numbers up to a specified limit using the Sieve of Eratosthenes.
     This method avoids division entirely by systematically crossing out multiples 
@@ -163,4 +255,3 @@ def sieve_of_eratosthenes(upper_limit):
     primes = [p for p in range(2, upper_limit + 1) if sieve[p]]
     
     return primes
-#adjusting speed of this one: start crossing out at p**2 rather than p, sieve up to sqrt of limit rather than limit.   
